@@ -132,7 +132,7 @@ export default function CertificateRequestForm() {
                     Address to
                 </label>
 
-                <textarea className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm shadow-sm transition-all outline-none placeholder:text-slate-400 hover:border-slate-300 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100"
+                <textarea className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm shadow-sm transition-all outline-none placeholder:text-slate-600 hover:border-slate-300 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100"
                     id='addressTo'
                     {...register("addressTo")}
                     placeholder="Enter recipient"
@@ -185,7 +185,7 @@ export default function CertificateRequestForm() {
                         aria-describedby={
                         errors.issuedOn ? 'issuedOn-error' : undefined
                         }
-                        className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm shadow-sm transition-all outline-none placeholder:text-slate-400 hover:border-slate-300 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100"
+                        className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm shadow-sm transition-all outline-none placeholder:text-slate-600 hover:border-slate-300 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100"
                     />
 
                     {errors.issuedOn && (
@@ -216,7 +216,7 @@ export default function CertificateRequestForm() {
                     errors.employeeId ? 'employeeId-error' : undefined
                     }
                     placeholder="e.g. 123456"
-                    className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm shadow-sm transition-all outline-none placeholder:text-slate-400 hover:border-slate-300 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100"
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm shadow-sm transition-all outline-none placeholder:text-slate-600 hover:border-slate-300 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100"
                 />
 
                 {errors.employeeId && (
