@@ -11,9 +11,9 @@ $files = @(
     'tsconfig.json', 'tsconfig.app.json', 'tsconfig.node.json', 'vite.config.ts', 'vercel.json',
     'public/favicon.svg',
     'src/main.tsx', 'src/App.tsx', 'src/index.css',
-    'src/api/CertificateApi.ts', 'src/api/certificateContracts.ts', 'src/utils/certificateDates.ts',
+    'src/api/CertificateApi.ts', 'src/api/certificateContracts.ts', 'src/utils/certificateDates.ts', 'src/utils/visibleText.ts',
     'api/request-list.ts', 'api/request-certificate.ts',
-    'server/certificateProxy.ts', 'server/viteCertificateProxy.ts',
+    'server/certificateProxy.ts', 'server/viteCertificateProxy.ts', 'server/certificateValidation.ts',
     'src/components/layout/AppLayout.tsx',
     'src/components/certificates/CertificateRequestForm.tsx',
     'src/components/certificates/PurposeEditor.tsx',
@@ -21,6 +21,7 @@ $files = @(
     'src/components/certificates/certificateRows.ts',
     'src/pages/NewRequestPage.tsx', 'src/pages/RequestsListPage.tsx', 'src/pages/NotFoundPage.tsx',
     'tests/certificateData.test.mjs', 'tests/purposeText.test.mjs', 'tests/secureApi.test.mjs', 'tests/devProxy.test.mjs',
+    'tests/serverValidation.test.mjs', 'tests/purposeHtml.fixtures.mjs',
     'tests/portal.browser.cjs', 'tests/purpose.browser.cjs',
     'scripts/package-release.ps1', 'scripts/verify-browser-bundle.mjs'
 )

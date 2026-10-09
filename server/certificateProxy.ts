@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { certificateListItemSchema, createCertificateResponseSchema } from '../src/api/certificateContracts.ts';
 import { parseCertificateDate } from '../src/utils/certificateDates.ts';
+import { getServerPurposeCharacterCount, isFutureCertificateDate } from './certificateValidation.ts';
 
 export const MAX_REQUEST_BYTES = 32 * 1024;
 const MAX_RESPONSE_BYTES = 1024 * 1024;
@@ -9,7 +10,7 @@ type Endpoint = 'request-list' | 'request-certificate';
 
 const payloadSchema = z.strictObject({
   address_to: z.string().min(1).max(500).refine((value) => value.trim().length > 0 && /^[\p{L}\p{N}\s]+$/u.test(value)),
-  purpose: z.string().min(1).max(24_000).refine((value) => value.trim().length > 0),
+  purpose: z.string().min(1).max(24_000).refine((value) => value.length <= 24_000 && getServerPurposeCharacterCount(value) >= 50),
   issued_on: z.string().max(10).refine((value) => parseCertificateDate(value) !== null),
   employee_id: z.string().min(1).max(100).regex(/^\d+$/),
 });
@@ -58,7 +59,10 @@ export async function proxyCertificate(request: Request, endpoint: Endpoint, api
     }
     try {
       const parsed = payloadSchema.safeParse(JSON.parse(await boundedText(request, MAX_REQUEST_BYTES)));
-      if (!parsed.success) return errorResponse(400, 'Invalid certificate payload');
+      const timeZone = request.headers.get('X-Client-Timezone') ?? 'UTC';
+      if (!parsed.success || !isFutureCertificateDate(parsed.data.issued_on, timeZone)) {
+        return errorResponse(400, 'Invalid certificate payload');
+      }
       body = JSON.stringify(parsed.data);
     } catch (error) {
       return errorResponse(error instanceof PayloadTooLarge ? 413 : 400,

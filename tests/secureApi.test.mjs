@@ -41,6 +41,56 @@ test('secure server and frontend contracts', async (t) => {
     assert.equal(response.status, 200);
     assert.deepEqual(await response.json(), { responce: 'Ok' });
   });
+  await t.test('POST enforces 50 visible Unicode characters without counting markup', async () => {
+    fetch.mock.mockImplementation(async () => json({ responce: 'Ok' }));
+    for (const purpose of [
+      `<p>${'a'.repeat(49)}</p>`,
+      `<p>${'\u200b'.repeat(100)}</p>`,
+      `<p>${'e\u0301'.repeat(49)}</p>`,
+      `<p>${'👨‍👩‍👧‍👦'.repeat(49)}</p>`,
+      `<script>${'a'.repeat(100)}</script><style>${'b'.repeat(100)}</style><template>${'c'.repeat(100)}</template><p>Short</p>`,
+      `<p title="${'a'.repeat(100)}"><strong>Short`,
+    ]) {
+      const before = fetch.mock.callCount();
+      assert.equal((await create.fetch(request('POST', JSON.stringify({ ...payload, purpose })))).status, 400);
+      assert.equal(fetch.mock.callCount(), before);
+    }
+    for (const purpose of [
+      `<p><strong>${'a'.repeat(25)}</strong><em>${'b'.repeat(25)}</em></p>`,
+      `<p>${'e\u0301'.repeat(50)}</p>`,
+      `<p>${'👨‍👩‍👧‍👦'.repeat(50)}</p>`,
+      `<p>${'&amp;'.repeat(50)}</p>`,
+      `<p><strong>${'a'.repeat(50)}`, // HTML5 recovery matches DOMParser.
+    ]) {
+      const before = fetch.mock.callCount();
+      assert.equal((await create.fetch(request('POST', JSON.stringify({ ...payload, purpose })))).status, 200);
+      assert.equal(JSON.parse(fetch.mock.calls[before].arguments[1].body).purpose, purpose);
+    }
+  });
+  await t.test('POST future dates follow client timezone across UTC midnight and DST', async () => {
+    t.mock.timers.enable({ apis: ['Date'], now: Date.parse('2026-10-09T00:30:00Z') });
+    fetch.mock.mockImplementation(async () => json({ responce: 'Ok' }));
+    try {
+      for (const [date, zone, status] of [
+        ['10/8/2026', 'UTC', 400], ['10/9/2026', 'UTC', 400], ['10/10/2026', 'UTC', 200],
+        ['2/30/2027', 'UTC', 400], ['2/29/2027', 'UTC', 400], ['2/29/2028', 'UTC', 200],
+        ['10/8/2026', 'America/Los_Angeles', 400], ['10/9/2026', 'America/Los_Angeles', 200],
+        ['10/9/2026', 'Europe/Athens', 400], ['10/10/2026', 'Europe/Athens', 200],
+        ['10/10/2026', 'Invalid/Zone', 400], ['10/10/2026', '', 400],
+      ]) {
+        const before = fetch.mock.callCount();
+        assert.equal((await create.fetch(request('POST', JSON.stringify({ ...payload, issued_on: date }), { 'X-Client-Timezone': zone }))).status, status, `${date} ${zone}`);
+        assert.equal(fetch.mock.callCount() - before, status === 200 ? 1 : 0);
+      }
+      assert.equal((await create.fetch(request('POST', JSON.stringify({ ...payload, issued_on: '10/9/2026' })))).status, 400, 'missing timezone uses UTC');
+      t.mock.timers.setTime(Date.parse('2026-10-09T23:30:00Z'));
+      assert.equal((await create.fetch(request('POST', JSON.stringify({ ...payload, issued_on: '10/10/2026' }), { 'X-Client-Timezone': 'Europe/Athens' }))).status, 400);
+      assert.equal((await create.fetch(request('POST', JSON.stringify({ ...payload, issued_on: '10/11/2026' }), { 'X-Client-Timezone': 'Europe/Athens' }))).status, 200);
+      t.mock.timers.setTime(Date.parse('2026-03-29T00:30:00Z'));
+      assert.equal((await create.fetch(request('POST', JSON.stringify({ ...payload, issued_on: '3/29/2026' }), { 'X-Client-Timezone': 'Europe/Athens' }))).status, 400);
+      assert.equal((await create.fetch(request('POST', JSON.stringify({ ...payload, issued_on: '3/30/2026' }), { 'X-Client-Timezone': 'Europe/Athens' }))).status, 200);
+    } finally { t.mock.timers.reset(); }
+  });
   for (const status of [401, 403, 500]) {
     await t.test(`upstream ${status} has a safe body for both endpoints`, async () => {
       fetch.mock.mockImplementation(async () => new Response('https://zalexinc.azure-api.net/?subscription-key=server-only-test-secret', { status }));
@@ -132,6 +182,7 @@ test('secure server and frontend contracts', async (t) => {
     fetch.mock.mockImplementation(async (url, options) => {
       assert.equal(url, '/api/request-certificate');
       assert.deepEqual(JSON.parse(options.body), payload);
+      assert.equal(options.headers['X-Client-Timezone'], Intl.DateTimeFormat().resolvedOptions().timeZone);
       return json({ responce: 'Ok' });
     });
     assert.deepEqual(await createCertificateRequest(payload), { responce: 'Ok' });

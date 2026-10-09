@@ -27,6 +27,8 @@ module.exports = async function verifyPortal(page) {
   };
 
   const handlePost = async (route) => {
+    assert.equal(route.request().headers()['x-client-timezone'],
+      await page.evaluate(() => Intl.DateTimeFormat().resolvedOptions().timeZone));
     postCount += 1;
     payload = route.request().postDataJSON();
     await new Promise((resolve) => { finishPost = resolve; });
@@ -66,14 +68,19 @@ module.exports = async function verifyPortal(page) {
     await page.getByText('Only letters, numbers and spaces are allowed', { exact: true }).waitFor();
     await employee.fill('ABC');
     await page.getByText('Employee ID must contain digits only', { exact: true }).waitFor();
-    const today = new Date();
-    await date.fill(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`);
+    const dates = await page.evaluate(() => {
+      const today = new Date();
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const iso = (value) => `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
+      return { today: iso(today), tomorrow: iso(tomorrow),
+        api: `${tomorrow.getMonth() + 1}/${tomorrow.getDate()}/${tomorrow.getFullYear()}` };
+    });
+    await date.fill(dates.today);
     await page.getByText('Issued on must be a future date', { exact: true }).waitFor();
     checks.push('recipient, employee ID and future-date validation remain intact');
 
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const isoDate = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+    const isoDate = dates.tomorrow;
     await address.fill('Example Recipient');
     await date.fill(isoDate);
     await employee.fill('00123');
@@ -118,7 +125,7 @@ module.exports = async function verifyPortal(page) {
     await waitForPost();
     assert.equal(postCount, 1);
     assert.equal(payload.employee_id, '00123');
-    assert.equal(payload.issued_on, `${tomorrow.getMonth() + 1}/${tomorrow.getDate()}/${tomorrow.getFullYear()}`);
+    assert.equal(payload.issued_on, dates.api);
     assert.ok(payload.purpose.includes('<strong>') && payload.purpose.includes('<em>'));
     finishPost();
     finishPost = undefined;

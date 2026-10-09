@@ -23,6 +23,7 @@ export async function createCertificateRequest(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'X-Client-Timezone': Intl.DateTimeFormat().resolvedOptions().timeZone,
     },
     body: JSON.stringify(payload),
   });

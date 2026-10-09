@@ -16,7 +16,7 @@ export function certificateDevProxy(apiKey: string | undefined): Plugin {
             response = errorResponse(404, 'API endpoint not found');
           } else {
             const headers = new Headers();
-            for (const name of ['content-type', 'content-length']) {
+            for (const name of ['content-type', 'content-length', 'x-client-timezone']) {
               const value = req.headers[name];
               if (typeof value === 'string') headers.set(name, value);
             }
