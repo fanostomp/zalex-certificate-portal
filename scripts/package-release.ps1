@@ -7,12 +7,12 @@ $archivePath = Join-Path $releaseDirectory 'zalex-certificate-portal.zip'
 
 # Deliberate allowlist: no recursion or dependence on .gitignore.
 $files = @(
-    '.gitignore', 'README.md', 'index.html', 'package.json', 'package-lock.json',
+    '.gitignore', 'README.md', 'docs/vercel-function-runtime.md', 'index.html', 'package.json', 'package-lock.json',
     'tsconfig.json', 'tsconfig.app.json', 'tsconfig.node.json', 'vite.config.ts', 'vercel.json',
     'public/favicon.svg',
     'src/main.tsx', 'src/App.tsx', 'src/index.css',
     'src/api/CertificateApi.ts', 'src/api/certificateContracts.ts', 'src/utils/certificateDates.ts', 'src/utils/visibleText.ts',
-    'api/request-list.ts', 'api/request-certificate.ts',
+    'api/request-list.ts', 'api/request-certificate.ts', 'api/tsconfig.json',
     'server/certificateProxy.ts', 'server/viteCertificateProxy.ts', 'server/certificateValidation.ts',
     'src/components/layout/AppLayout.tsx',
     'src/components/certificates/CertificateRequestForm.tsx',
@@ -21,7 +21,7 @@ $files = @(
     'src/components/certificates/certificateRows.ts',
     'src/pages/NewRequestPage.tsx', 'src/pages/RequestsListPage.tsx', 'src/pages/NotFoundPage.tsx',
     'tests/certificateData.test.mjs', 'tests/purposeText.test.mjs', 'tests/secureApi.test.mjs', 'tests/devProxy.test.mjs',
-    'tests/serverValidation.test.mjs', 'tests/purposeHtml.fixtures.mjs',
+    'tests/serverValidation.test.mjs', 'tests/purposeHtml.fixtures.mjs', 'tests/functionPackaging.test.mjs',
     'tests/portal.browser.cjs', 'tests/purpose.browser.cjs',
     'scripts/package-release.ps1', 'scripts/verify-browser-bundle.mjs'
 )
