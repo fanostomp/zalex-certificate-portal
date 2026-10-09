@@ -73,8 +73,8 @@ export default function RequestsListPage() {
   return (
     <section aria-labelledby="requests-heading" className="space-y-8">
       <div>
-        <p className="text-sm font-medium text-indigo-700">Certificate services / All requests</p>
-        <h1 id="requests-heading" className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-700">Certificate services / All requests</p>
+        <h1 id="requests-heading" className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-[2.6rem]">
           Requests list
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-7 text-slate-600">
@@ -82,10 +82,10 @@ export default function RequestsListPage() {
         </p>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex flex-col gap-2 border-b border-slate-100 px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-          <h2 className="text-base font-semibold text-slate-900">Submitted requests</h2>
-          <output aria-live="polite" aria-atomic="true" className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+      <div className="overflow-hidden rounded-3xl border border-slate-200/90 bg-white shadow-[0_16px_48px_-28px_rgba(20,34,70,0.32)]">
+        <div className="flex flex-col gap-3 border-b border-slate-100 bg-gradient-to-r from-white to-indigo-50/50 px-6 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+          <h2 className="text-base font-bold text-slate-900">Submitted requests</h2>
+          <output aria-live="polite" aria-atomic="true" className="w-fit rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-800">
            {isLoading
             ? 'Loading...'
             : error
@@ -93,7 +93,7 @@ export default function RequestsListPage() {
               : `${sortedRequests.length} of ${requests.length} requests`}
           </output>
         </div>
-        <div className="grid grid-cols-1 gap-4 border-b border-slate-100 px-6 py-5 sm:grid-cols-2 lg:grid-cols-4 sm:px-8">
+        <div className="grid grid-cols-1 gap-4 border-b border-slate-100 bg-slate-50/40 px-6 py-5 sm:grid-cols-2 sm:px-8 lg:grid-cols-4">
   <div>
     <label
       htmlFor="filter-reference"
@@ -108,7 +108,7 @@ export default function RequestsListPage() {
       value={referenceFilter}
       onChange={(event) => setReferenceFilter(event.target.value)}
       placeholder="e.g. 50"
-      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-indigo-600"
+      className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm shadow-sm transition-colors hover:border-slate-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
     />
   </div>
 
@@ -125,7 +125,7 @@ export default function RequestsListPage() {
       value={addressFilter}
       onChange={(event) => setAddressFilter(event.target.value)}
       placeholder="e.g. bank mars"
-      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-indigo-600"
+      className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm shadow-sm transition-colors hover:border-slate-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
     />
   </div>
 
@@ -140,7 +140,7 @@ export default function RequestsListPage() {
       id="filter-status"
       value={statusFilter}
       onChange={(event) => setStatusFilter(event.target.value)}
-      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-indigo-600"
+      className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm shadow-sm transition-colors hover:border-slate-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
     >
       <option value="">All statuses</option>
 
@@ -160,7 +160,7 @@ export default function RequestsListPage() {
               setAddressFilter('');
               setStatusFilter('');
             }}
-            className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-indigo-600"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:border-indigo-200 hover:bg-indigo-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
           >
             Clear filters
           </button>
@@ -172,11 +172,11 @@ export default function RequestsListPage() {
           aria-label="Certificate requests table"
           className="overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-indigo-600"
         >
-          <table aria-busy={isLoading} className="min-w-[720px] w-full text-left text-sm">
+          <table aria-busy={isLoading} className="min-w-[760px] w-full text-left text-sm">
             <caption className="sr-only">
               Employee certificate requests
             </caption>
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+            <thead className="bg-slate-50/90 text-[11px] uppercase tracking-[0.12em] text-slate-600">
               <tr>
                 {columns.map((column) => {
                   const field: SortField | null =
@@ -197,13 +197,13 @@ export default function RequestsListPage() {
                             : 'descending'
                           : undefined
                       }
-                      className="whitespace-nowrap px-6 py-4 font-semibold"
+                      className="whitespace-nowrap px-6 py-4 font-bold"
                     >
                       {field ? (
                         <button
                           type="button"
                           onClick={() => handleSort(field)}
-                          className="inline-flex items-center gap-1 rounded hover:text-indigo-700 focus-visible:outline-2 focus-visible:outline-indigo-600"
+                          className="inline-flex items-center gap-2 rounded-md px-1 py-1 transition-colors hover:text-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                         >
                           {column}
 
@@ -253,9 +253,9 @@ export default function RequestsListPage() {
                 sortedRequests.map((request) => (
                   <tr
                     key={request.rowId}
-                    className="border-t border-slate-100 hover:bg-slate-50"
+                    className="border-t border-slate-100 transition-colors hover:bg-indigo-50/40"
                   >
-                    <td className="px-6 py-4 font-medium">
+                    <td className="px-6 py-4 font-bold tabular-nums text-indigo-800">
                       {request.reference_no}
                     </td>
 
@@ -274,7 +274,7 @@ export default function RequestsListPage() {
                     </td>
 
                     <td className="px-6 py-4">
-                      {request.status}
+                      <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${request.status.toLowerCase() === 'done' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : request.status.toLowerCase() === 'pending' ? 'border-amber-200 bg-amber-50 text-amber-800' : 'border-sky-200 bg-sky-50 text-sky-800'}`}><span aria-hidden="true" className="size-1.5 rounded-full bg-current" />{request.status}</span>
                     </td>
                   </tr>
                 ))

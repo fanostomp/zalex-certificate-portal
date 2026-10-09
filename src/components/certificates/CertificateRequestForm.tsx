@@ -132,7 +132,7 @@ export default function CertificateRequestForm() {
                     Address to
                 </label>
 
-                <textarea className="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                <textarea className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm shadow-sm transition-all outline-none placeholder:text-slate-600 hover:border-slate-300 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100"
                     id='addressTo'
                     {...register("addressTo")}
                     placeholder="Enter recipient"
@@ -185,7 +185,7 @@ export default function CertificateRequestForm() {
                         aria-describedby={
                         errors.issuedOn ? 'issuedOn-error' : undefined
                         }
-                        className="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                        className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm shadow-sm transition-all outline-none placeholder:text-slate-600 hover:border-slate-300 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100"
                     />
 
                     {errors.issuedOn && (
@@ -216,7 +216,7 @@ export default function CertificateRequestForm() {
                     errors.employeeId ? 'employeeId-error' : undefined
                     }
                     placeholder="e.g. 123456"
-                    className="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm shadow-sm transition-all outline-none placeholder:text-slate-600 hover:border-slate-300 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100"
                 />
 
                 {errors.employeeId && (
@@ -232,14 +232,14 @@ export default function CertificateRequestForm() {
             <button
                 type="submit"
                 disabled={isSubmitting}
-                className="mt-6 rounded-lg bg-indigo-700 px-6 py-3 text-sm font-medium text-white hover:bg-indigo-800 disabled:cursor-not-allowed disabled:opacity-50"
+                className="mt-8 inline-flex min-h-12 items-center justify-center rounded-xl bg-indigo-700 px-7 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-700/20 transition-all hover:bg-indigo-800 hover:shadow-indigo-700/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                 {isSubmitting ? 'Submitting...' : 'Submit Request'}
             </button>
             </fieldset>
             {submitStatus === 'success' && (
                 <output
-                    className="mt-4 block rounded-lg bg-green-50 p-4 text-sm text-green-800"
+                    className="mt-5 block rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-900"
                 >
                     Your certificate request was submitted successfully.
                 </output>
@@ -248,7 +248,7 @@ export default function CertificateRequestForm() {
             {submitStatus === 'error' && (
             <p
                 role="alert"
-                className="mt-4 rounded-lg bg-red-50 p-4 text-sm text-red-700"
+                className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-800"
             >
                 Something went wrong. Please try again.
             </p>
