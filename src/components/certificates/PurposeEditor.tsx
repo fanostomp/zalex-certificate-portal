@@ -33,7 +33,7 @@ export default function PurposeEditor({
         'aria-disabled': String(disabled),
         'aria-invalid': String(Boolean(error)),
         'aria-describedby': error ? `${counterId} ${errorId}` : counterId,
-        class: 'min-h-36 px-4 py-3 outline-none',
+        class: 'min-h-36 px-4 py-3 text-sm leading-7 text-slate-900 outline-none',
       },
     },
   });
@@ -62,15 +62,15 @@ export default function PurposeEditor({
   }, [editor, value]);
 
   const toolbarButtonClass = (active: boolean) =>
-    `rounded px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50 ${
-      active ? 'bg-indigo-100 text-indigo-800' : 'hover:bg-slate-100'
+    `rounded-lg px-3.5 py-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50 ${
+      active ? 'bg-indigo-100 text-indigo-800 shadow-sm' : 'text-slate-700 hover:bg-white hover:text-indigo-800'
     }`;
 
   return (
     <div className="mt-6">
       <p id={labelId} className="mb-2 text-sm font-medium text-slate-700">Purpose</p>
-      <div className="rounded-lg border border-slate-300 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100">
-        <fieldset disabled={disabled} className="flex gap-2 border-b border-slate-200 p-2">
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50/50 shadow-sm transition-all focus-within:border-indigo-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-indigo-100">
+        <fieldset disabled={disabled} className="flex gap-2 border-b border-slate-200 bg-slate-100/60 p-2">
           <legend className="sr-only">Purpose formatting</legend>
           <button
             type="button"
