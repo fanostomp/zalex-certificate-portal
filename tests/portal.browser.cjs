@@ -37,8 +37,12 @@ module.exports = async function verifyPortal(page) {
     await getGate;
     await route.fulfill({ status: getStatus, contentType: 'application/json', body: JSON.stringify(getRecords) });
   };
-  await page.route('**/request-certificate**', handlePost);
-  await page.route('**/request-list**', handleGet);
+  // Fail closed if the frontend regresses to an unmocked API URL.
+  const blockUnexpectedApi = (route) => route.abort();
+  await page.route('http://localhost:3000/api/**', blockUnexpectedApi);
+  await page.route('https://zalexinc.azure-api.net/**', blockUnexpectedApi);
+  await page.route('http://localhost:3000/api/request-certificate', handlePost);
+  await page.route('http://localhost:3000/api/request-list', handleGet);
 
   try {
     await page.goto('http://localhost:3000/requests/new');
@@ -269,7 +273,9 @@ module.exports = async function verifyPortal(page) {
   } finally {
     if (finishPost) finishPost();
     if (releaseGet) releaseGet();
-    await page.unroute('**/request-certificate**', handlePost);
-    await page.unroute('**/request-list**', handleGet);
+    await page.unroute('http://localhost:3000/api/request-certificate', handlePost);
+    await page.unroute('http://localhost:3000/api/request-list', handleGet);
+    await page.unroute('http://localhost:3000/api/**', blockUnexpectedApi);
+    await page.unroute('https://zalexinc.azure-api.net/**', blockUnexpectedApi);
   }
 };
