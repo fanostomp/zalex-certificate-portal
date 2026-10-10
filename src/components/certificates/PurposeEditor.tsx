@@ -20,6 +20,7 @@ export default function PurposeEditor({
   const counterId = `${id}-counter`;
   const errorId = `${id}-error`;
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [StarterKit],
     content: value,
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
@@ -46,7 +47,6 @@ export default function PurposeEditor({
     }),
   });
 
-  // RHF expects a focusable ref; the actual input is Tiptap's editable surface.
   useImperativeHandle(inputRef, () => ({
     focus: () => { editor?.commands.focus(); },
   }), [editor]);

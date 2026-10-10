@@ -1,6 +1,18 @@
 import { NavLink, Outlet } from 'react-router'
-import {useRef, useEffect} from 'react'
+import {useRef, useEffect, useState, Suspense} from 'react'
 import {useLocation} from 'react-router'
+import { CertificateApiError, createCertificateRequest, getSubmissionErrorMessage, type CreateCertificateRequest } from '../../api/CertificateApi'
+import RouteErrorBoundary from './RouteErrorBoundary'
+
+type CertificateSubmission =
+  | { status: 'idle' | 'pending' | 'success' }
+  | { status: 'error'; message: string; outcomeUnknown: boolean }
+
+export type CertificateSubmissionContext = {
+  submission: CertificateSubmission;
+  submitRequest: (payload: CreateCertificateRequest) => Promise<void>;
+  clearFeedback: () => void;
+}
 
 const navigation = [
   { to: '/requests/new', label: 'Request certificate', shortLabel: 'New request' },
@@ -11,6 +23,38 @@ export default function AppLayout() {
   const mainRef = useRef<HTMLElement>(null)
   const location = useLocation();
   const previousPathnameRef = useRef(location.pathname)
+  const [submission, setSubmission] = useState<CertificateSubmission>({ status: 'idle' })
+  const pendingSubmissionRef = useRef(false)
+
+  async function submitRequest(payload: CreateCertificateRequest) {
+    if (pendingSubmissionRef.current) return;
+    pendingSubmissionRef.current = true;
+    setSubmission({ status: 'pending' });
+    try {
+      await createCertificateRequest(payload);
+      setSubmission({ status: 'success' });
+    } catch (error) {
+      setSubmission({ status: 'error', message: getSubmissionErrorMessage(error),
+        outcomeUnknown: error instanceof CertificateApiError && error.outcomeUnknown });
+    } finally {
+      pendingSubmissionRef.current = false;
+    }
+  }
+
+  function clearFeedback() {
+    setSubmission(current => current.status === 'idle' || current.status === 'pending'
+      || (current.status === 'error' && current.outcomeUnknown) ? current : { status: 'idle' });
+  }
+
+  useEffect(() => {
+    if (submission.status !== 'pending') return;
+    const warnBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warnBeforeUnload);
+    return () => window.removeEventListener('beforeunload', warnBeforeUnload);
+  }, [submission.status]);
   useEffect(() => {
     if (previousPathnameRef.current !== location.pathname) {
       mainRef.current?.focus();
@@ -89,7 +133,30 @@ export default function AppLayout() {
 
           <main ref={mainRef} id="main-content" tabIndex={-1} className="w-full flex-1 bg-[radial-gradient(ellipse_at_top_right,_rgba(99,102,241,0.055),_transparent_55%)] px-5 py-9 sm:px-10 sm:py-10 lg:px-14 lg:py-12">
             <div className="mx-auto w-full max-w-6xl">
-              <Outlet />
+              {submission.status !== 'idle' && (
+                <div className={`mb-6 rounded-xl border p-4 text-sm font-medium ${submission.status === 'error'
+                  ? 'border-red-200 bg-red-50 text-red-800' : submission.status === 'success'
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-indigo-200 bg-indigo-50 text-indigo-900'}`}>
+                  {submission.status === 'error' ? <p role="alert">{submission.message}</p> : (
+                    <output aria-live="polite" aria-atomic="true" className="block">
+                      {submission.status === 'pending'
+                        ? 'Submitting your certificate request… You can navigate within the portal; the result will appear here.'
+                        : 'Your certificate request was submitted successfully.'}
+                    </output>
+                  )}
+                  {submission.status !== 'pending' && (
+                    <button type="button" onClick={() => setSubmission({ status: 'idle' })}
+                      className="mt-2 rounded-md px-2 py-1 text-sm underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                      Dismiss submission feedback
+                    </button>
+                  )}
+                </div>
+              )}
+              <RouteErrorBoundary key={location.pathname}>
+                <Suspense fallback={<output aria-live="polite" className="block py-8 text-slate-600">Loading page…</output>}>
+                  <Outlet context={{ submission, submitRequest, clearFeedback } satisfies CertificateSubmissionContext} />
+                </Suspense>
+              </RouteErrorBoundary>
             </div>
           </main>
         </div>
