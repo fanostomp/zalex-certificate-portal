@@ -1,8 +1,10 @@
 import { Navigate, Route, Routes } from 'react-router'
+import { lazy } from 'react'
 import AppLayout from './components/layout/AppLayout'
-import NewRequestPage from './pages/NewRequestPage'
-import RequestsListPage from './pages/RequestsListPage'
-import NotFoundPage from './pages/NotFoundPage'
+
+const NewRequestPage = lazy(() => import('./pages/NewRequestPage'))
+const RequestsListPage = lazy(() => import('./pages/RequestsListPage'))
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 
 export default function App() {
   return (

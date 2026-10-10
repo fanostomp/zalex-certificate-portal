@@ -1,90 +1,18 @@
 import { Controller, useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
+import { useOutletContext } from 'react-router';
 import PurposeEditor from './PurposeEditor';
-import { getPurposeCharacterCount } from './purposeText';
-import { formatApiDate } from '../../utils/certificateDates';
-import {createCertificateRequest, type CreateCertificateRequest,} from '../../api/CertificateApi';
+import { certificateSchema, toApiPayload, toLocalDateString, type CertificateFormValues } from './certificateFormValidation';
+import type { CertificateSubmissionContext } from '../layout/AppLayout';
 
-function toApiPayload(
-    values: CertificateFormValues
-    ): CreateCertificateRequest {
-    return {
-        address_to: values.addressTo,
-        purpose: values.purpose,
-        issued_on: formatApiDate(values.issuedOn),
-        employee_id: values.employeeId,
-    };
-}
-
-function toLocalDateString(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-
-  return `${year}-${month}-${day}`;
-}
-function isFutureDate(value: string): boolean {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-        return false;
-    }
-
-    const selected = new Date(`${value}T00:00:00`);
-
-    if (
-        Number.isNaN(selected.getTime()) ||
-        toLocalDateString(selected) !== value
-    ) {
-        return false;
-    }
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    return selected > today;
-}
-const certificateSchema = z.object({
-  addressTo: z
-    .string()
-    .trim()
-    .min(1, 'Address to is required')
-    .regex(
-      /^[\p{L}\p{N}\s]+$/u,
-      'Only letters, numbers and spaces are allowed'
-    ),
-    purpose: z.string().superRefine((html, context) => {
-        const count = getPurposeCharacterCount(html);
-        if (count < 50) {
-            context.addIssue({
-                code: 'custom',
-                message: count === 0
-                    ? 'Purpose is required'
-                    : 'Purpose must contain at least 50 visible characters',
-            });
-        }
-    }),
-    employeeId: z
-        .string()
-        .trim()
-        .min(1, 'Employee ID is required')
-        .regex(/^\d+$/, 'Employee ID must contain digits only'),
-    issuedOn: z
-        .string()
-        .min(1, 'Issued on is required')
-        .refine(
-            (value) => value === '' || isFutureDate(value),
-            'Issued on must be a future date'
-    ),
-});     
-
-type CertificateFormValues = z.infer<typeof certificateSchema>;
 export default function CertificateRequestForm() {
+    const { submission, submitRequest, clearFeedback } = useOutletContext<CertificateSubmissionContext>();
     const {
         register,
         handleSubmit,
         control,
-        formState: { errors, isSubmitting },
+        formState: { errors, isSubmitting: isFormSubmitting },
         } = useForm<CertificateFormValues>({
         resolver: zodResolver(certificateSchema),
         mode: 'onChange',
@@ -95,22 +23,8 @@ export default function CertificateRequestForm() {
             employeeId: '',
         },
     });
-    const [submitStatus, setSubmitStatus] = useState<
-        'idle' | 'success' | 'error'
-    >('idle');
-    const onSubmit = async (data: CertificateFormValues) => {
-        setSubmitStatus('idle');
-
-        try {
-            const payload = toApiPayload(data);
-
-            await createCertificateRequest(payload);
-
-            setSubmitStatus('success');
-        } catch {
-            setSubmitStatus('error');
-        }
-    };
+    const isSubmitting = isFormSubmitting || submission.status === 'pending';
+    const onSubmit = (data: CertificateFormValues) => submitRequest(toApiPayload(data));
     const [minIssuedOn] = useState(() => {
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
@@ -122,7 +36,7 @@ export default function CertificateRequestForm() {
         <form
             noValidate
             onSubmit={handleSubmit(onSubmit)}
-            onChange={() => setSubmitStatus('idle')}
+            onChange={clearFeedback}
             aria-busy={isSubmitting}
         >
             <fieldset disabled={isSubmitting} className="min-w-0">
@@ -134,7 +48,7 @@ export default function CertificateRequestForm() {
 
                 <textarea className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm shadow-sm transition-all outline-none placeholder:text-slate-600 hover:border-slate-300 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100"
                     id='addressTo'
-                    {...register("addressTo")}
+                    {...register("addressTo", { deps: ['purpose'] })}
                     placeholder="Enter recipient"
                     aria-invalid={Boolean(errors.addressTo)}
                     aria-describedby={
@@ -158,7 +72,7 @@ export default function CertificateRequestForm() {
                         <PurposeEditor
                         value={field.value}
                         onChange={(html) => {
-                            setSubmitStatus('idle');
+                            clearFeedback();
                             field.onChange(html);
                         }}
                         onBlur={field.onBlur}
@@ -180,7 +94,7 @@ export default function CertificateRequestForm() {
                         id="issuedOn"
                         type="date"
                         min={minIssuedOn}
-                        {...register('issuedOn')}
+                        {...register('issuedOn', { deps: ['purpose'] })}
                         aria-invalid={Boolean(errors.issuedOn)}
                         aria-describedby={
                         errors.issuedOn ? 'issuedOn-error' : undefined
@@ -210,7 +124,7 @@ export default function CertificateRequestForm() {
                     id="employeeId"
                     type="text"
                     inputMode="numeric"
-                    {...register('employeeId')}
+                    {...register('employeeId', { deps: ['purpose'] })}
                     aria-invalid={Boolean(errors.employeeId)}
                     aria-describedby={
                     errors.employeeId ? 'employeeId-error' : undefined
@@ -237,22 +151,6 @@ export default function CertificateRequestForm() {
                 {isSubmitting ? 'Submitting...' : 'Submit Request'}
             </button>
             </fieldset>
-            {submitStatus === 'success' && (
-                <output
-                    className="mt-5 block rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-900"
-                >
-                    Your certificate request was submitted successfully.
-                </output>
-            )}
-
-            {submitStatus === 'error' && (
-            <p
-                role="alert"
-                className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-800"
-            >
-                Something went wrong. Please try again.
-            </p>
-            )}
         </form>
     );
 }

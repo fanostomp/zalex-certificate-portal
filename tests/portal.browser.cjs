@@ -154,8 +154,9 @@ module.exports = async function verifyPortal(page) {
     await waitForPost();
     finishPost();
     finishPost = undefined;
-    await page.getByText('Something went wrong. Please try again.', { exact: true }).waitFor();
+    await page.getByText('The submission outcome is unknown. Your request may have been processed. Verify the outcome before submitting again.', { exact: true }).waitFor();
     checks.push('POST rejects unexpected success responses');
+    await page.getByRole('button', { name: 'Dismiss submission feedback', exact: true }).click();
 
     getRecords = [];
     getGate = new Promise(resolve => { releaseGet = resolve; });

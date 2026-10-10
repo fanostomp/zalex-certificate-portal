@@ -20,16 +20,19 @@ The development server uses localhost port 3000 with `strictPort`; it fails if t
 
 ## Implemented behavior
 
-- Required recipient containing letters, numbers and whitespace; required digits-only employee ID, preserving leading zeros; real calendar issue date strictly after the user's local current date.
+- Required recipient containing letters, numbers and whitespace, trimmed and normalized to NFC before validation/submission (composed and decomposed accents agree); required digits-only employee ID, preserving leading zeros; real calendar issue date strictly after the user's local current date.
+- Frontend limits match the server: recipient at most 500 Unicode code points under the installed Zod version, employee ID at most 100 digits, Purpose HTML at most 24,000 UTF-16 code units including markup, and the complete serialized JSON body at most 32 KiB measured in UTF-8 bytes. Oversized requests produce accessible inline errors and do not POST. These upper limits are separate from the visible-grapheme minimum.
 - Rich-text Purpose with Bold/Italic, inline errors, validation focus and a shared live counter/validation helper. Minimum 50 visible grapheme clusters: decomposed accents and compound emoji count as one each. HTML entities are decoded; whitespace is trimmed and collapsed, with a single internal separator counting as one. Invisible/control/format-only input and standalone combining marks contribute nothing. Joiners and emoji tags are retained only to preserve grapheme segmentation. Counting is not HTML sanitization.
-- POST loading, success and failure feedback. All inputs and editor controls lock during submission. Success preserves values; editing clears feedback. Success requires HTTP success and the mock's intentionally spelled `responce: "Ok"`.
-- GET loading, empty and error states with runtime response validation. Invalid response records reject the list rather than being silently dropped.
+- POST loading, success and failure feedback. All inputs and editor controls lock during submission, including after returning to the form while a POST is pending. Submission state lives in the existing layout and survives internal route navigation. Pending requests register a browser unload warning; this is best effort and neither cancels the server operation nor persists state across reloads. Success preserves values on the mounted form; editing clears ordinary feedback. Unknown-outcome warnings remain when editing, until explicitly dismissed or another submission is started. Success requires HTTP success and the mock's intentionally spelled `responce: "Ok"`.
+- Submission errors distinguish validation (400), oversized payloads (413), rate limits (429), and temporary unavailability (503). Timeouts (504), gateway failures (502), network failures and invalid success responses have an unknown outcome: the request may have been processed and users should verify before submitting again. POST requests are never automatically retried.
+- GET loading, empty and error states with runtime response validation and an accessible Retry button. Retry starts a new cancellable GET without navigation; unmounting aborts the active request. Invalid response records reject the list rather than being silently dropped.
 - **Reference No. filter:** exact string matching after trimming the query (`5` does not match `50`; `050` does not match `50`).
 - **Address to filter:** case-insensitive substring matching for every whitespace-separated search word, in any order.
 - **Status filter:** exact selected status; options come from the full loaded dataset.
 - Filters combine with AND. **Clear filters** restores all records while keeping the selected sort. The count displays `matching of total requests`.
 - **Issued on sort:** chronological, initially descending; clicking toggles direction. **Status sort:** alphabetical English comparison ignoring case, initially ascending when selected. One sort field is active at a time. Equal values retain fetched order.
 - Responsive navigation/form, horizontally scrollable table with keyboard-operable scroll buttons, labeled filters, keyboard-operable sort buttons, `aria-sort`, validation announcements and route focus management.
+- Route components load lazily under an accessible loading fallback. Opening the list does not load the new-request/editor chunk. A small route error boundary preserves navigation and submission feedback if a chunk fails to load. Tiptap creates its editor after mount so a suspended route cannot outlive an editor instance created during rendering.
 
 ## Dates and duplicate references
 
@@ -51,7 +54,7 @@ The mock has no unique backend ID and may return duplicate reference numbers or 
 
 ### Browser scenarios
 
-With the Vite dev server running, call `tests/portal.browser.cjs` and `tests/purpose.browser.cjs` using a Playwright `Page` supplied by external browser tooling. Playwright is not a project dependency; `npm test` does not execute these scenarios. In a Node harness that already has Playwright installed, use the following (paths are relative to this project root):
+With the Vite dev server running, call `tests/portal.browser.cjs`, `tests/purpose.browser.cjs` and `tests/finalization.browser.cjs` using a Playwright `Page` supplied by external browser tooling. Playwright is not a project dependency; `npm test` does not execute these scenarios. In a Node harness that already has Playwright installed, use the following (paths are relative to this project root):
 
 ```js
 const { chromium } = require('playwright');
@@ -62,6 +65,7 @@ const { chromium } = require('playwright');
     await page.goto('http://localhost:3000/requests/new');
     console.log(await require('./tests/purpose.browser.cjs')(page));
     console.log(await require('./tests/portal.browser.cjs')(page));
+    console.log(await require('./tests/finalization.browser.cjs')(page));
   } finally {
     await browser.close();
   }
@@ -69,6 +73,10 @@ const { chromium } = require('playwright');
 ```
 
 The browser scenarios intercept the exact same-origin API URLs and need no real key. Use a harmless placeholder for mocked server tests. Every GET/POST in the portal scenario is intercepted, using fixed records with duplicate references and identical records. It checks validation, Unicode counter agreement, formatting, mocked POST outcomes, loading/empty/error states, individual/combined filters, clearing, both sort directions, stable rows, keyboard interactions, accessibility attributes and responsive layouts. The Purpose scenario checks the same HTML/Unicode fixtures used by server tests, including malformed markup, entities, whitespace, combining characters and emoji. The portal scenario also checks the client-timezone header and computes test dates in the browser timezone. Neither scenario creates real certificates or relies on live record counts.
+
+The finalization scenarios check client size limits and multibyte payload rejection, automatic Purpose error/ARIA updates when recipient, employee ID or date edits cross the payload limit, corrected-form submission without duplicate POSTs, NFC submission, status-specific error messages, unknown outcomes without automatic retry, pending POST navigation and form locking, unload-handler cleanup, and list retry recovery/cancellation. All API traffic is mocked. Node regression tests independently cover exact serialized boundaries at 32,767/32,768/32,769 bytes, JSON escaping, server-compatible character semantics and typed submission errors.
+
+After building, start `npm run preview -- --host localhost --port 4173 --strictPort` and call `tests/routes.browser.cjs` with an external Playwright `Page`. Fresh browser contexts check production chunk requests, the delayed-route loading fallback, and a failed route chunk during a pending mocked POST. The layout retains the outcome and navigation; no real certificates are submitted.
 
 ## Server-side API architecture
 
@@ -113,6 +121,6 @@ The configured dashboard rate limit mitigates abuse when its rule matches, but i
 
 Rotate the assessment credential before reusing it outside this demo, especially if it has been used in a legacy client-prefixed configuration or shared outside the intended secret store. Renaming an environment variable does not revoke an earlier exposed credential. Historical source used `VITE_ZALEX_API_KEY`; the current application does not. A clean source/history scan cannot establish that earlier browser builds, external copies or logs never exposed the credential.
 
-Treat the mock responses as fixtures, not durable storage guarantees: successful POST does not guarantee a subsequent GET persists the request. Purpose HTML is submitted while list values are escaped text. The existing build chunk-size warning remains. Static `npm run preview` does not run serverless functions.
+Treat the mock responses as fixtures, not durable storage guarantees: successful POST does not guarantee a subsequent GET persists the request. Purpose HTML is submitted while list values are escaped text. The editor remains a substantial dynamically loaded dependency. Static `npm run preview` does not run serverless functions.
 
 After `npm run build`, run `node scripts/verify-browser-bundle.mjs` to scan every production asset for locally configured credentials without displaying their values. Missing local credentials limits this check; also review the frontend for secret reads.

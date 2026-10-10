@@ -10,6 +10,7 @@ export default function RequestsListPage() {
   const [requests, setRequests] = useState<CertificateRequestRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadVersion, setLoadVersion] = useState(0);
   const tableScrollRef = useRef<HTMLElement>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [sortField, setSortField] = useState<SortField>('issued_on');
@@ -45,7 +46,13 @@ export default function RequestsListPage() {
     return () => {
       controller.abort();
     };
-  }, []);
+  }, [loadVersion]);
+
+  function retryRequests() {
+    setError(null);
+    setIsLoading(true);
+    setLoadVersion(current => current + 1);
+  }
 
   function handleSort(field: SortField) {
     if (sortField === field) {
@@ -231,7 +238,13 @@ export default function RequestsListPage() {
               ) : error ? (
                 <tr>
                   <td colSpan={columns.length} className="px-6 py-12 text-center text-red-600">
-                    <p role="alert">{error} Please try again by reopening this page.</p>
+                    <div className="max-w-[220px] text-left sm:max-w-none sm:text-center">
+                    <p role="alert">{error}</p>
+                    <button type="button" onClick={retryRequests} aria-label="Retry loading requests"
+                      className="mt-3 rounded-lg border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                      Retry
+                    </button>
+                    </div>
                   </td>
                 </tr>
               ) : requests.length === 0 ? (
