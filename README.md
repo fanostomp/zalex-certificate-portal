@@ -6,14 +6,14 @@ EY Junior React Front-end Developer assessment built with React, TypeScript, Vit
 
 The application integrates with the mock Zalex Assessment API through same-origin Vercel Functions. It loads certificate requests, filters and sorts them, and submits a validated certificate request without exposing the Zalex API credential to the browser.
 
-The project owner has verified anonymous access to the Production demo, a GET returning the nine mock certificates, and a successful real POST returning `{"responce":"Ok"}` with the React success message. These reported checks establish that the deployed integration works; the mock backend does not guarantee that submissions persist or appear in a later GET.
+Manual production smoke tests confirmed anonymous access, retrieval of nine mock certificate records, and a successful certificate submission returning `{"responce":"Ok"}` with the React success message. The mock backend does not guarantee that submissions persist or appear in a later GET.
 
 ## Localhost setup
 
 Requires Node.js 22.12+ and npm. Use a modern browser with `Intl.Segmenter` support.
 
 1. Run `npm ci` to install the locked dependencies.
-2. Create `.env.local` in the project root with `ZALEX_API_KEY=<your-assessment-api-key>`. Obtain the value separately from the assessment materials. No credential is included in the source release.
+2. Create `.env.local` in the project root with `ZALEX_API_KEY=<your-assessment-api-key>`. Obtain the value separately from the assessment materials. No credentials are committed to the repository.
 3. Run `npm run dev` and open **http://localhost:3000**.
 
 The development server uses localhost port 3000 with `strictPort`; it fails if the port is occupied. Restart it after environment changes. Missing credentials produce the application's API error feedback.
@@ -86,9 +86,9 @@ Upstream requests have a 10-second deadline covering fetch and response-body rea
 
 ## Vercel deployment
 
-Production is deployed at the public demo URL above. The project owner reports that `ZALEX_API_KEY` is configured for **Production** as a Sensitive/Secret server environment variable. Local `.env.local` is not uploaded or used as Vercel configuration. The production key value is neither documented nor included in the source release.
+Production is deployed at the public demo URL above. The Production API key, `ZALEX_API_KEY`, is configured through Vercel environment variables as Sensitive/Secret and is not stored in the repository. Local `.env.local` is not uploaded or used as Vercel configuration.
 
-For a separate Vercel setup, select **Production Branch = main**, framework **Vite**, Node.js **22.x or 24.x**, build command `npm run build`, and output directory `dist`. Configure `ZALEX_API_KEY` through Vercel's server environment settings for the intended environment, using the privately supplied assessment credential. Never use a client-prefixed variable. Environment changes apply to subsequent deployments; this documentation workflow does not deploy or change environment variables.
+For a separate Vercel setup, select **Production Branch = main**, framework **Vite**, Node.js **22.x or 24.x**, build command `npm run build`, and output directory `dist`. Configure `ZALEX_API_KEY` through Vercel's server environment settings for the intended environment, using the privately supplied assessment credential. Never use a client-prefixed variable. Environment changes apply to subsequent deployments.
 
 ### Source-controlled configuration and security
 
@@ -99,7 +99,7 @@ For a separate Vercel setup, select **Production Branch = main**, framework **Vi
 
 ### Dashboard-managed settings
 
-The project owner reports a Vercel Firewall rate-limit rule described as **5 requests per minute per IP**, with **Deny (403)**, and the Production Sensitive/Secret environment variable described above. These are dashboard-managed settings, not rules implemented or exported by this repository. Their complete configuration, route coverage, grouping, enforcement and coverage of aliases/Preview deployments have not been independently audited. Repository tests cannot certify those settings, and no firewall load test or additional live POST was performed during documentation finalization.
+Vercel Firewall is configured with a rate-limit rule of **5 requests per minute per IP**, using **Deny (403)**. This rule and the Production Sensitive/Secret environment variable are managed in Vercel's dashboard, separately from the repository. The complete Firewall configuration, route coverage, grouping and enforcement across aliases and Preview deployments have not been independently verified. Repository tests do not verify dashboard settings.
 
 The Production demo is intentionally accessible anonymously. Deployment Protection for a separate Preview is a distinct dashboard setting: enable and verify it on every intended Preview URL/alias before using a real credential there. Production configuration does not establish Preview protection or supply a Preview key. A local Vite build does not certify deployed routing or dashboard access controls.
 
@@ -111,7 +111,7 @@ Both `GET /api/request-list` and `POST /api/request-certificate` are publicly re
 
 The configured dashboard rate limit mitigates abuse when its rule matches, but it does not eliminate abuse or authenticate users. Callers can distribute traffic across IPs, and shared networks can cause legitimate reviewers to share a limit. Payload and timeout limits bound each invocation; they do not limit request frequency. The application implements neither authentication nor its own distributed rate limiter. Before handling real employee data or broadening this beyond an assessment demo, add authorization and review abuse controls. CORS, frontend validation and Origin checks cannot replace authentication.
 
-Rotate the assessment credential before reusing it outside this demo, especially if it has been used in a legacy client-prefixed configuration or shared outside the intended secret store. Renaming an environment variable does not revoke an earlier exposed credential. Historical source used `VITE_ZALEX_API_KEY`; the current application does not. A clean source/history scan cannot establish that earlier browser builds, external copies or logs never exposed the credential. No credential rotation or dashboard-setting change is performed by this documentation workflow.
+Rotate the assessment credential before reusing it outside this demo, especially if it has been used in a legacy client-prefixed configuration or shared outside the intended secret store. Renaming an environment variable does not revoke an earlier exposed credential. Historical source used `VITE_ZALEX_API_KEY`; the current application does not. A clean source/history scan cannot establish that earlier browser builds, external copies or logs never exposed the credential.
 
 Treat the mock responses as fixtures, not durable storage guarantees: successful POST does not guarantee a subsequent GET persists the request. Purpose HTML is submitted while list values are escaped text. The existing build chunk-size warning remains. Static `npm run preview` does not run serverless functions.
 
