@@ -7,7 +7,7 @@ $archivePath = Join-Path $releaseDirectory 'zalex-certificate-portal.zip'
 
 # Deliberate allowlist: no recursion or dependence on .gitignore.
 $files = @(
-    '.gitignore', 'README.md', 'docs/vercel-function-runtime.md', 'index.html', 'package.json', 'package-lock.json',
+    '.gitignore', 'README.md', 'index.html', 'package.json', 'package-lock.json',
     'tsconfig.json', 'tsconfig.app.json', 'tsconfig.node.json', 'vite.config.ts', 'vercel.json',
     'public/favicon.svg',
     'src/main.tsx', 'src/App.tsx', 'src/index.css',
