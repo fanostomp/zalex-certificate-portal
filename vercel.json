@@ -4,7 +4,10 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "git": {
-    "deploymentEnabled": { "feat/secure-vercel-api": false }
+    "deploymentEnabled": {
+      "feat/secure-vercel-api": false,
+      "docs/ey-assessment-finalization": false
+    }
   },
   "functions": {
     "api/*.ts": { "maxDuration": 15 }
